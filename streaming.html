@@ -1,0 +1,206 @@
+<html>
+    <head>
+        <title>Frequency Streaming</title>
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js" charset="utf-8"></script>
+        <script src = "js/three.min.js"></script>
+        <link href="https://fonts.googleapis.com/css?family=Poppins&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="css/streaming.css">
+    </head>
+<body>
+<div class="box">
+    <a class="button" href="#popup1">Instructions</a>
+</div>
+
+<div id="popup1" class="overlay">
+    <div class="popup">
+        <h2>Instructions</h2>
+        <a class="close" href="#">&times;</a>
+        <div class="content">
+            <center>This is a very simple interactive two-channel audio-visual example that demonstrates 'streaming'. Click and hold to play the audio. Drag the cursor to change the pitch of the left channel and try and bring it close to the middle where the right channel plays at around 1Khz. With headphones the phasing is largely mitigated even when the continuous tones are very close in frequency. 
+            <br>
+            <br>
+            Note, the two streams can still perceptually merge as one despite being binaurally seperated (more about this in the 'spatial' module). This makes using multiple pure tones as individual mappings in applications such as auditory graphs difficult.</center>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+<script>    
+"use strict";
+
+let context = new AudioContext(), mousedown = false, mousedown2 = 0, oscillator, oscillator2,
+    scene, camera, renderer, line1, line2, plane, mouse = {x: 0, y: 0}, INTERSECTED;
+
+let createLine1 = function() {
+
+    let material = new THREE.LineBasicMaterial( { color: 0x0000ff } );
+    let geometry = new THREE.Geometry();
+    geometry.vertices.push(new THREE.Vector3( 0, -20, 0) );
+    geometry.vertices.push(new THREE.Vector3( 0, 20, 0) );
+
+    line1 = new THREE.Line(geometry, material);
+
+    // When the mouse moves, call the given function
+    document.addEventListener('mousemove', onMouseMove, false);
+    }
+
+    // Follows the mouse event
+    function onMouseMove(event) {
+
+        // Update the mouse variable
+        event.preventDefault();
+        mouse.x = (event.clientX / window.innerWidth) * 2 -1;
+        mouse.y = 0;
+
+        // Make the sphere follow the mouse
+        let vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
+        vector.unproject( camera );
+        let dir = vector.sub( camera.position ).normalize();
+        let distance = - camera.position.z / dir.z;
+        let pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
+        line1.position.copy(pos);
+
+        scene.add(line1);
+
+    };
+
+let createLine2 = function() {
+
+    let material = new THREE.LineBasicMaterial( { color: 0x0000ff } );
+    let geometry = new THREE.Geometry();
+    geometry.vertices.push(new THREE.Vector3( 0, -20, 0) );
+    geometry.vertices.push(new THREE.Vector3( 0, 20, 0) );
+
+    line2 = new THREE.Line(geometry, material);
+
+    scene.add(line2);
+
+};
+
+/*let createPlane = function() {
+        let geometry = new THREE.PlaneGeometry((window.innerWidth / window.innerHeight)*25, 10 );
+        let material = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.DoubleSide} );
+        plane = new THREE.Mesh( geometry, material );
+
+        let vector = new THREE.Vector3(((window.innerWidth / window.innerWidth) * -.8)+.2, ((window.innerHeight/window.innerHeight) * -.8) +.2 , 0);
+        vector.unproject( camera );
+        let dir = vector.sub( camera.position ).normalize();
+        let distance = - camera.position.z / dir.z;
+        let pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
+        plane.position.copy(pos);
+
+
+        scene.add(plane);
+    };*/
+
+// set up the environment
+// initiallize scene, camera, objects and renderer
+let init = function() {
+
+
+    // 1. create the scene
+    scene = new THREE.Scene();
+    
+    camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 500 );
+    camera.position.set( 0, 0, 100 );
+    camera.lookAt( 0, 0, 0 );
+
+    
+    // 3. create and locate the objects on the scene
+    createLine1();
+    createLine2();
+
+    // 4. create the renderer and raycaster
+    //raycaster = new THREE.Raycaster();
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    document.body.appendChild( renderer.domElement );
+
+};
+
+// main animation loop - calls every 50-60 ms.
+let mainLoop = function() {
+
+    /*raycaster.setFromCamera( mouse, camera );
+
+                var intersects = raycaster.intersectObjects( scene.children );
+
+                if ( intersects.length > 0 ) {
+
+                    if ( INTERSECTED != intersects[ 0 ].object ) {
+
+                        INTERSECTED = intersects[ 0 ].object;
+                        //console.log((INTERSECTED), "is intersected");
+
+                    }
+
+                } else {
+
+                    INTERSECTED = null;
+                    //console.log((INTERSECTED), "is not intersected");
+
+                } */
+
+    renderer.render( scene, camera );
+    requestAnimationFrame(mainLoop);
+};
+
+/////////
+init();
+mainLoop();
+
+//////////////////////////// Audio Code /////////////////////////////
+let panNode = context.createStereoPanner();
+panNode.pan.value = -1;
+
+let panNode2 = context.createStereoPanner();
+panNode2.pan.value = 1;
+
+let merger = context.createChannelMerger(2);
+
+let calculateFrequency = function (mouseXPosition) {
+  let minFrequency = 20,
+      maxFrequency = 2000;
+
+  return ((mouseXPosition / window.innerWidth) * maxFrequency) + minFrequency;
+};
+
+
+document.body.addEventListener('mousedown', function (e) {
+    mousedown = true;
+    oscillator = context.createOscillator();
+    oscillator.frequency.setTargetAtTime(calculateFrequency(e.clientX), context.currentTime, 0.01);
+    oscillator.connect(panNode);
+    panNode.connect(merger, 0, 0);
+    oscillator.start(context.currentTime);
+    mousedown2 = mousedown2 + 1;
+    if (mousedown2 < 2){
+        oscillator2 = context.createOscillator();
+        oscillator2.frequency.value = 1025;
+        oscillator2.connect(panNode2);
+        panNode2.connect(merger, 0, 1);
+        oscillator2.start(context.currentTime);
+    };
+});
+
+document.body.addEventListener('mouseup', function () {
+  mousedown = false;
+  mousedown2 = mousedown2 -1;
+  oscillator.stop(context.currentTime);
+  oscillator.disconnect();
+  oscillator2.stop(context.currentTime);
+  oscillator2.disconnect();
+});
+
+document.body.addEventListener('mousemove', function (e) {
+  if (mousedown) {
+      oscillator.frequency.setTargetAtTime(calculateFrequency(e.clientX), context.currentTime, 0.01);
+  }
+});
+
+merger.connect(context.destination);
+
+
+
+</script>

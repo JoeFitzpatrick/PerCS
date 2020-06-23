@@ -1,0 +1,529 @@
+<html>
+    <head>
+        <title>Focussing Streams</title>
+        <script src = "js/three.min.js"></script>
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js" charset="utf-8"></script>
+        <script src="https://tonejs.github.io/build/Tone.js"></script>
+        <link href="https://fonts.googleapis.com/css?family=Poppins&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="css/focus.css">
+    </head>
+    <body>
+        <h1>T I M E</h1>
+        <h2>FREQUENCY</h2>
+        <div class="switch_box box_1">
+            <font color = #ff0000> Ch1 </font>
+            <br>
+            <input id="checkbox1" type="checkbox" class="switch_1">
+            <font color = #0339fc> Ch2 </font>
+            <br>
+            <input id="checkbox2" type="checkbox" class="switch_1">
+            <font color = #03fc07> Ch3 </font>
+            <br>
+            <input id="checkbox3" type="checkbox" class="switch_1">
+            <font color = #fcf003> Ch4 </font>
+            <br>
+            <input id="checkbox4" type="checkbox" class="switch_1">
+        </div>
+        <div class="wrapper">
+            Focus:
+        </div>
+        <div class="switch_box2 box_2"> 
+            <font color = #ff0000> Ch1 </font>
+            <input id="checkbox1b" type="checkbox" class="switch_1">
+            <font color = #0339fc> Ch2 </font>
+            <br>
+            <input id="checkbox2b" type="checkbox" class="switch_1">
+            <font color = #03fc07> Ch3 </font>
+            <br>
+            <input id="checkbox3b" type="checkbox" class="switch_1">
+            <font color = #fcf003> Ch4 </font>
+            <br>
+            <input id="checkbox4b" type="checkbox" class="switch_1">
+        </div>
+
+        <div class="box">
+        <a class="button" href="#popup1">Instructions</a>
+        </div>
+
+        <div class="box2">
+        <a class="button" href="focus1.html">Test Yourself</a>
+        </div>
+
+       <div id="popup1" class="overlay">
+        <div class="popup">
+            <h3>Instructions</h3>
+            <a class="close" href="#">&times;</a>
+            <div class="content">
+                <center>This is an interactive audiovisual tool that can be used to demonstrate the streaming effect of concurrently sonified data streams, as well as the use of a sawtooth wave to focus or isolate a particular tone. Click and hold to start the audio. Each channel can be toggled on or off. Each channel may also be 'focused' i.e. converted from a sine wave to a sawtooth wave. Refresh the page (CMD/Ctrl-Shift-R) to refresh the data points on the graph.</center>
+            </div>
+        </div>
+    </div>
+    </body>
+</html>
+<script>    
+"use strict";
+
+//import { Scene, PerspectiveCamera, WebGLRenderer, Mesh, BoxGeometry, MeshBasicMaterial } from 'three';
+//import { Interaction } from 'three.interaction';
+
+let context = new AudioContext(), mousedown = false, osc, osc2, osc3, osc4, freq, freq2, freq3, fre4,
+    scene, camera, renderer, controls, line1, line2, line3, line4, line7, ADD = 0, rayCast, mouse;
+
+let checkBox1 = document.getElementById("checkbox1");
+let checkBox2 = document.getElementById("checkbox2");
+let checkBox3 = document.getElementById("checkbox3");
+let checkBox4 = document.getElementById("checkbox4");
+
+let checkBox1b = document.getElementById("checkbox1b");
+let checkBox2b = document.getElementById("checkbox2b");
+let checkBox3b = document.getElementById("checkbox3b");
+let checkBox4b = document.getElementById("checkbox4b");
+
+window.onload = onPageLoad();
+
+function onPageLoad() {
+  document.getElementById("checkbox1").checked = true;
+  document.getElementById("checkbox2").checked = true;
+  document.getElementById("checkbox3").checked = true;
+  document.getElementById("checkbox4").checked = true;
+}
+
+let randomPoint = function(){
+    let num = Math.floor(Math.random()*20) + 1; // this will get a number between 1 and 99;
+    num *= Math.floor(Math.random()*2) == 1 ? 1 : -1; // this will add minus sign in 50% of case
+    return num;
+}
+
+let array1 = [randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint()];
+
+let array2 = [randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint()];
+
+let array3 = [randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint()];
+
+let array4 = [randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint(), randomPoint()];
+
+console.log(array1);
+
+let curve1 = new THREE.SplineCurve( [
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -50, (window.innerHeight/window.innerHeight) * array1[0]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -40, (window.innerHeight/window.innerHeight) * array1[1]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -30, (window.innerHeight/window.innerHeight) * array1[2]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -20, (window.innerHeight/window.innerHeight) * array1[3]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -10, (window.innerHeight/window.innerHeight) * array1[4]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 1, (window.innerHeight/window.innerHeight) * array1[5]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 10, (window.innerHeight/window.innerHeight) * array1[6]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 20, (window.innerHeight/window.innerHeight) * array1[7]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 30, (window.innerHeight/window.innerHeight) * array1[8]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 40, (window.innerHeight/window.innerHeight) * array1[9]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 50, (window.innerHeight/window.innerHeight) * array1[10])
+
+    ] );
+
+let createLine1 = function() {
+
+    let points = curve1.getPoints( 250 );
+    let geometry = new THREE.BufferGeometry().setFromPoints( points );
+    let material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+
+    line1 = new THREE.Line( geometry, material );
+
+    
+    scene.add(line1);
+};
+
+let curve2 = new THREE.SplineCurve( [
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -50, (window.innerHeight/window.innerHeight) * array2[0]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -40, (window.innerHeight/window.innerHeight) * array2[1]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -30, (window.innerHeight/window.innerHeight) * array2[2]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -20, (window.innerHeight/window.innerHeight) * array2[3]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -10, (window.innerHeight/window.innerHeight) * array2[4]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 1, (window.innerHeight/window.innerHeight) * array2[5]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 10, (window.innerHeight/window.innerHeight) * array2[6]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 20, (window.innerHeight/window.innerHeight) * array2[7]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 30, (window.innerHeight/window.innerHeight) * array2[8]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 40, (window.innerHeight/window.innerHeight) * array2[9]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 50, (window.innerHeight/window.innerHeight) * array2[10])
+
+    ] );
+
+let createLine2 = function() {
+
+    let points = curve2.getPoints( 250 );
+    let geometry = new THREE.BufferGeometry().setFromPoints( points );
+    let material = new THREE.LineBasicMaterial( { color : 0x0339fc } );
+
+    line2 = new THREE.Line( geometry, material );
+
+    
+    scene.add(line2);
+
+};
+
+let curve3 = new THREE.SplineCurve( [
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -50, (window.innerHeight/window.innerHeight) * array3[0]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -40, (window.innerHeight/window.innerHeight) * array3[1]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -30, (window.innerHeight/window.innerHeight) * array3[2]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -20, (window.innerHeight/window.innerHeight) * array3[3]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -10, (window.innerHeight/window.innerHeight) * array3[4]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 1, (window.innerHeight/window.innerHeight) * array3[5]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 10, (window.innerHeight/window.innerHeight) * array3[6]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 20, (window.innerHeight/window.innerHeight) * array3[7]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 30, (window.innerHeight/window.innerHeight) * array3[8]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 40, (window.innerHeight/window.innerHeight) * array3[9]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 50, (window.innerHeight/window.innerHeight) * array3[10])
+
+    ] );
+
+let createLine3 = function() {
+
+    let points = curve3.getPoints( 250 );
+    let geometry = new THREE.BufferGeometry().setFromPoints( points );
+    let material = new THREE.LineBasicMaterial( { color : 0x03fc07 } );
+
+    line3 = new THREE.Line( geometry, material );
+
+    
+    scene.add(line3);
+
+};
+
+let curve4 = new THREE.SplineCurve( [
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -50, (window.innerHeight/window.innerHeight) * array4[0]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -40, (window.innerHeight/window.innerHeight) * array4[1]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -30, (window.innerHeight/window.innerHeight) * array4[2]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -20, (window.innerHeight/window.innerHeight) * array4[3]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * -10, (window.innerHeight/window.innerHeight) * array4[4]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 1, (window.innerHeight/window.innerHeight) * array4[5]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 10, (window.innerHeight/window.innerHeight) * array4[6]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 20, (window.innerHeight/window.innerHeight) * array4[7]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 30, (window.innerHeight/window.innerHeight) * array4[8]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 40, (window.innerHeight/window.innerHeight) * array4[9]),
+    new THREE.Vector2((window.innerWidth / window.innerWidth) * 50, (window.innerHeight/window.innerHeight) * array4[10])
+
+    ] );
+
+let createLine4 = function() {
+
+    let points = curve4.getPoints( 250 );
+    let geometry = new THREE.BufferGeometry().setFromPoints( points );
+    let material = new THREE.LineBasicMaterial( { color : 0xfcf003 } );
+
+    line4 = new THREE.Line( geometry, material );
+
+    
+    scene.add(line4);
+
+};
+
+let createLine5 = function() {
+
+    let material = new THREE.LineBasicMaterial( { color: 0xffffff } );
+    let geometry = new THREE.Geometry();
+    geometry.vertices.push(new THREE.Vector3((window.innerWidth / window.innerWidth) * -50, (window.innerHeight/window.innerHeight) * -23.5, 0) );
+    geometry.vertices.push(new THREE.Vector3((window.innerWidth / window.innerWidth) * 50, (window.innerHeight/window.innerHeight) * -23.5, 0) );
+
+    let line5 = new THREE.Line(geometry, material);
+
+    scene.add(line5);
+}
+
+let createLine6 = function() {
+
+    let material = new THREE.LineBasicMaterial( { color: 0xffffff } );
+    let geometry = new THREE.Geometry();
+    geometry.vertices.push(new THREE.Vector3((window.innerWidth / window.innerWidth) * -50, (window.innerHeight/window.innerHeight) * -23.5, 0) );
+    geometry.vertices.push(new THREE.Vector3((window.innerWidth / window.innerWidth) * -50, (window.innerHeight/window.innerHeight) * 23.5, 0) );
+
+    let line6 = new THREE.Line(geometry, material);
+
+    scene.add(line6);
+}
+
+let createLine7 = function() {
+
+    let material = new THREE.LineBasicMaterial( { color: 0xffffff } );
+    let geometry = new THREE.Geometry();
+    geometry.vertices.push(new THREE.Vector3((window.innerWidth / window.innerWidth) * -50, (window.innerHeight/window.innerHeight) * -23.5, 0) );
+    geometry.vertices.push(new THREE.Vector3((window.innerWidth / window.innerWidth) * -50, (window.innerHeight/window.innerHeight) * 23.5, 0) );
+
+    line7 = new THREE.Line(geometry, material);
+
+    scene.add(line7);
+}
+
+/*set on click function for raycaster
+let onMouseClick = function(e) {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = - (e.clientY / window.innerHeight) * 2 + 1;
+        mouse.z = 1;
+        
+        rayCast.setFromCamera(mouse, camera);
+    }*/
+
+
+// set up the environment
+// initiallize scene, camera, objects and renderer
+let init = function() {
+
+
+    // 1. create the scene
+    scene = new THREE.Scene();
+    
+    camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 500 );
+    camera.position.set( 0, 0, 100 );
+    camera.lookAt( 0, 0, 0 );
+
+    
+    // 3. create and locate the objects on the scene
+    createLine1();
+    createLine2();
+    createLine3();
+    createLine4();
+    createLine5();
+    createLine6();
+    createLine7();
+
+    /*raycaster code for init part
+    rayCast = new THREE.Raycaster();
+    mouse = new THREE.Vector2();
+    mouse.x = mouse.y = -1;
+    document.addEventListener("click", onMouseClick, false);*/
+
+
+    // 4. create the renderer   
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    document.body.appendChild( renderer.domElement );
+    
+
+
+};
+
+// main animation loop - calls every 50-60 ms.
+let mainLoop = function() {
+
+    line7.position.x += ADD;
+
+    if (checkBox1.checked == true){
+        scene.add(line1);
+    } else {
+        scene.remove(line1);
+    };
+    if (checkBox2.checked == true){
+        scene.add(line2);
+    } else {
+        scene.remove(line2);
+    };
+    if (checkBox3.checked == true){
+        scene.add(line3);
+    } else {
+        scene.remove(line3);
+    };
+    if (checkBox4.checked == true){
+        scene.add(line4);
+    } else {
+        scene.remove(line4);
+    };
+
+    if (checkBox1b.checked == true){
+        line1.material.color.setHex( 0xffffff );
+    } else {
+        line1.material.color.setHex( 0xff0000 );
+    }
+    if (checkBox2b.checked == true){
+        line2.material.color.setHex( 0xffffff );
+    } else {
+        line2.material.color.setHex( 0x0339fc );
+    }
+    if (checkBox3b.checked == true){
+        line3.material.color.setHex( 0xffffff );
+    } else {
+        line3.material.color.setHex( 0x03fc07 );
+    }
+    if (checkBox4b.checked == true){
+        line4.material.color.setHex( 0xffffff );
+    } else {
+        line4.material.color.setHex( 0xfcf003 );
+    }
+
+    /*raycaster code for main loop
+    let intersects = rayCast.intersectObjects(scene.children);
+    line1.material.color.setHex( 0xff0000 );
+    line2.material.color.setHex( 0x0339fc );
+    line3.material.color.setHex( 0x03fc07 );
+    line4.material.color.setHex( 0xfcf003 );
+    intersects.forEach(obj => obj.object.material.color.set(0xffffff)); */
+    renderer.render( scene, camera );
+    requestAnimationFrame(mainLoop);
+};
+
+/////////
+init();
+mainLoop();
+
+//////////////////////////// Audio Code /////////////////////////////
+
+let gainNode = context.createGain();
+gainNode.gain.setValueAtTime(.05, context.currentTime);
+
+let scaleArray = function(array){
+        // Pushing the entire range of values to start from 0, so that we have no negatives
+        // Dividing the values by ( max - min ) of range, so that max will be 1
+        // Assigning new 400-1400 range and rounding down
+        let minFrequency = 400;
+        let maxFrequency = 1400;
+        let minV = Math.min.apply(Math, array);;
+        for(let i=0; i<array.length; i++) {
+            array[i] -= minV;
+            array[i] = ((array[i] / 2) * maxFrequency) + minFrequency;
+            array[i] = Number((array[i]).toFixed(0));
+        }
+        let maxV = Math.max.apply(Math, array);;
+        for(let i=0; i<array.length; i++) {
+            array[i] /= ( maxV - minV );
+            array[i] = ((array[i] / 2) * maxFrequency) + minFrequency;
+            array[i] = Number((array[i]).toFixed(0));
+        }
+        return array;
+    };
+
+
+document.body.addEventListener('mousedown', function (e) {
+    mousedown = true;
+    ADD = 0.17; 
+
+    let arrayA1 = scaleArray(array1);
+    osc = context.createOscillator();
+    osc.frequency.value = array1[0];
+    osc.frequency.linearRampToValueAtTime(arrayA1[1], context.currentTime + 1);
+    osc.frequency.linearRampToValueAtTime(arrayA1[2], context.currentTime + 2);
+    osc.frequency.linearRampToValueAtTime(arrayA1[3], context.currentTime + 3);
+    osc.frequency.linearRampToValueAtTime(arrayA1[4], context.currentTime + 4);
+    osc.frequency.linearRampToValueAtTime(arrayA1[5], context.currentTime + 5);
+    osc.frequency.linearRampToValueAtTime(arrayA1[6], context.currentTime + 6);
+    osc.frequency.linearRampToValueAtTime(arrayA1[7], context.currentTime + 7);
+    osc.frequency.linearRampToValueAtTime(arrayA1[8], context.currentTime + 8);
+    osc.frequency.linearRampToValueAtTime(arrayA1[9], context.currentTime + 9);
+    osc.frequency.linearRampToValueAtTime(arrayA1[10], context.currentTime + 10);
+    osc.connect(gainNode);
+
+    if (checkBox1.checked == true){
+        osc.start(context.currentTime);
+        osc.stop(context.currentTime + 10);;
+    };
+
+    if (checkBox1b.checked == true){
+        osc.type = "sawtooth";
+    } else {
+        osc.type = "sine";
+    }
+    
+    let arrayA2 = scaleArray(array2);
+    osc2 = context.createOscillator();
+    osc2.frequency.value = array2[0];
+    osc2.frequency.linearRampToValueAtTime(arrayA2[1], context.currentTime + 1);
+    osc2.frequency.linearRampToValueAtTime(arrayA2[2], context.currentTime + 2);
+    osc2.frequency.linearRampToValueAtTime(arrayA2[3], context.currentTime + 3);
+    osc2.frequency.linearRampToValueAtTime(arrayA2[4], context.currentTime + 4);
+    osc2.frequency.linearRampToValueAtTime(arrayA2[5], context.currentTime + 5);
+    osc2.frequency.linearRampToValueAtTime(arrayA2[6], context.currentTime + 6);
+    osc2.frequency.linearRampToValueAtTime(arrayA2[7], context.currentTime + 7);
+    osc2.frequency.linearRampToValueAtTime(arrayA2[8], context.currentTime + 8);
+    osc2.frequency.linearRampToValueAtTime(arrayA2[9], context.currentTime + 9);
+    osc2.frequency.linearRampToValueAtTime(arrayA2[10], context.currentTime + 10);
+    osc2.connect(gainNode);
+
+    if (checkBox2.checked == true){
+        osc2.start(context.currentTime);
+        osc2.stop(context.currentTime + 10);;
+    };
+
+     if (checkBox2b.checked == true){
+        osc2.type = "sawtooth";
+    } else {
+        osc2.type = "sine";
+    }
+
+    let arrayA3 = scaleArray(array3);
+    osc3 = context.createOscillator();
+    osc3.frequency.value = array3[0];
+    osc3.frequency.linearRampToValueAtTime(arrayA3[1], context.currentTime + 1);
+    osc3.frequency.linearRampToValueAtTime(arrayA3[2], context.currentTime + 2);
+    osc3.frequency.linearRampToValueAtTime(arrayA3[3], context.currentTime + 3);
+    osc3.frequency.linearRampToValueAtTime(arrayA3[4], context.currentTime + 4);
+    osc3.frequency.linearRampToValueAtTime(arrayA3[5], context.currentTime + 5);
+    osc3.frequency.linearRampToValueAtTime(arrayA3[6], context.currentTime + 6);
+    osc3.frequency.linearRampToValueAtTime(arrayA3[7], context.currentTime + 7);
+    osc3.frequency.linearRampToValueAtTime(arrayA3[8], context.currentTime + 8);
+    osc3.frequency.linearRampToValueAtTime(arrayA3[9], context.currentTime + 9);
+    osc3.frequency.linearRampToValueAtTime(arrayA3[10], context.currentTime + 10);
+    osc3.connect(gainNode);
+
+    if (checkBox3.checked == true){
+        osc3.start(context.currentTime);
+        osc3.stop(context.currentTime + 10);;
+    };
+
+     if (checkBox3b.checked == true){
+        osc3.type = "sawtooth";
+    } else {
+        osc3.type = "sine";
+    }
+
+    let arrayA4 = scaleArray(array4);
+    osc4 = context.createOscillator();
+    osc4.frequency.value = array4[0];
+    osc4.frequency.linearRampToValueAtTime(arrayA4[1], context.currentTime + 1);
+    osc4.frequency.linearRampToValueAtTime(arrayA4[2], context.currentTime + 2);
+    osc4.frequency.linearRampToValueAtTime(arrayA4[3], context.currentTime + 3);
+    osc4.frequency.linearRampToValueAtTime(arrayA4[4], context.currentTime + 4);
+    osc4.frequency.linearRampToValueAtTime(arrayA4[5], context.currentTime + 5);
+    osc4.frequency.linearRampToValueAtTime(arrayA4[6], context.currentTime + 6);
+    osc4.frequency.linearRampToValueAtTime(arrayA4[7], context.currentTime + 7);
+    osc4.frequency.linearRampToValueAtTime(arrayA4[8], context.currentTime + 8);
+    osc4.frequency.linearRampToValueAtTime(arrayA4[9], context.currentTime + 9);
+    osc4.frequency.linearRampToValueAtTime(arrayA4[10], context.currentTime + 10);
+    osc4.connect(gainNode);
+
+    if (checkBox4.checked == true){
+        osc4.start(context.currentTime);
+        osc4.stop(context.currentTime + 10);;
+    };
+
+     if (checkBox4b.checked == true){
+        osc4.type = "sawtooth";
+    } else {
+        osc4.type = "sine";
+    }
+
+    gainNode.connect(context.destination);
+});
+
+document.body.addEventListener('mouseup', function () {
+  mousedown = false;
+  ADD = 0;
+  scene.remove(line7);
+  createLine7();
+  if (checkBox1.checked == true){
+        osc.stop(context.currentTime);
+        osc.disconnect();
+    };
+  if (checkBox2.checked == true){
+        osc2.stop(context.currentTime);
+        osc2.disconnect();
+    };
+  if (checkBox3.checked == true){
+        osc3.stop(context.currentTime);
+        osc3.disconnect();
+    };
+  if (checkBox4.checked == true){
+        osc4.stop(context.currentTime);
+        osc4.disconnect();
+    };
+});
+
+    
+    
+
+
+</script>

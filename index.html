@@ -1,0 +1,154 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>PerCS</title>
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+	<link rel="stylesheet" type="text/css" href="css/mobile.css" media="screen and (max-width : 568px)">
+	<link href="https://fonts.googleapis.com/css?family=Poppins&display=swap" rel="stylesheet">
+	<script type="text/javascript" src="js/mobile.js"></script>
+</head>
+<body>
+	<h1>PerCS</h1>
+	<div id="header">
+		<ul id="navigation">
+			<li class="selected">
+				<a href="index.html">Home</a>
+			</li>
+      <li>
+        <a href="resources.html">Guidelines</a>
+      </li>
+			<li>
+				<a href="interactive.html">Your Design</a>
+			</li>
+			<li>
+				<a href="references.html">References</a>
+			</li>
+			<li>
+				<a href="contact.html">Survey</a>
+			</li>
+		</ul>
+	</div>
+
+<div id="intro">
+  <div id="blurb">
+    <center><p1><i>A <b>per</b>ceptually <b>c</b>ongruent <b>s</b>onification web guide to help identify perceptual complications that might arise from using multiple sound streams in sonification.</i></p1></center>
+    <br>
+    <p1>As with many types of exploratory data analysis there is no uniform sonification approach that is going to be suitable for all applications. Some popular approaches include Parameter Mapping Sonification and Model-Based Sonification. This web guide can be used in addition to either and provides useful information about how we perceive sound. It reviews components of Auditory Scene Analysis such as Stream Segregation and Auditory Attention, and encourages designers to account for potential 'streaming' issues as well as other perceptual phenomena. While useful for artistic sonification, the web guide is ultimately aimed towards designers of more practical applications.</p1>
+    <br>
+    <br>
+  </div>
+  <div style="text-align:center">
+    <span class="dot" onclick="currentSlide(1)"></span> 
+    <span class="dot" onclick="currentSlide(2)"></span> 
+    <span class="dot" onclick="currentSlide(3)"></span> 
+    <span class="dot" onclick="currentSlide(4)"></span> 
+  </div>
+
+  <div class="slideshow-container">
+    <div class="mySlides fade">
+      <div class="numbertext">1 / 4</div>
+      <img src="imgs/sonification.png" height="400" width="700">
+      <div class="text">This is a generic visual model of sonification.</div>
+    </div>
+
+    <div class="mySlides fade">
+      <div class="numbertext">2 / 4</div>
+      <img src="imgs/asa.png" height="530" width="650">
+      <div class="text">This is a basic visual model of Stream Segregation (SS). Note the key determinants of allocation: space; frequency; time; and loudness.</div>
+    </div>
+
+    <div class="mySlides fade">
+      <div class="numbertext">3 / 4</div>
+      <img src="imgs/mappings.png" height="540" width="650">
+      <div class="text">This is a visual breakdown of how sonification mappings are dependant on the determinants of SS.</div>
+    </div>
+
+    <div class="mySlides fade">
+      <div class="numbertext">4 / 4</div>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <a href="interactive.html" class="button">Continue</a>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <div class="text">Tell us about your sonification application for information most relevant to your design.</div>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+    </div>
+
+    <div>
+      <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+      <a class="next" onclick="plusSlides(1)">&#10095;</a>
+    </div>
+  </div>
+  <br>
+  <br>
+  <br>
+  <div id="projectLink">
+  <a href="https://www.researchgate.net/project/Utilising-Auditory-Scene-Analysis-Principles-in-Sonification" target="_blank">Project Log</a>
+  </div>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+</div>
+
+<!--slider script-->
+<script>
+  var slideIndex = 1;
+  showSlides(slideIndex);
+
+  function plusSlides(n) {
+    showSlides(slideIndex += n);
+
+  }
+
+  function currentSlide(n) {
+    showSlides(slideIndex = n);
+  }
+
+  function showSlides(n) {
+    var i;
+    var slides = document.getElementsByClassName("mySlides");
+    var dots = document.getElementsByClassName("dot");
+    if (n > slides.length) {slideIndex = 1}    
+    if (n < 1) {slideIndex = slides.length}
+    for (i = 0; i < slides.length; i++) {
+        slides[i].style.display = "none";  
+    }
+    for (i = 0; i < dots.length; i++) {
+        dots[i].className = dots[i].className.replace(" active", "");
+    }
+    slides[slideIndex-1].style.display = "block";  
+    dots[slideIndex-1].className += " active";
+  }
+</script>
+
+	<div id="footer">
+		<div>
+			<p>joe.fitzpatrick@lit.ie</p>
+			<ul>
+				<li>
+					<a href="https://isrg.eu/" id="facebook">ISRG</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</body>
+</html>
